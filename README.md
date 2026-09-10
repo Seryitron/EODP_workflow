@@ -1,1 +1,2 @@
-# EODP_workflow
+# eodp
+EODP main repository
