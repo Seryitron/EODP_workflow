@@ -36,7 +36,7 @@ class l1b(initL1b):
                 eq_add = readFactor(os.path.join(self.auxdir,self.l1bConfig.eq_add+band+NC_EXT),EQ_ADD)
 
                 # Do the equalization and save to file
-                toa = self.equalization(toa, eq_add, eq_mult)
+                toa = self.equalization(toa, eq_add, eq_mult) # TODO THIS METHOD
                 writeToa(self.outdir, self.globalConfig.l1b_toa_eq + band, toa)
 
             # Restitution (absolute radiometric gain)
@@ -56,13 +56,13 @@ class l1b(initL1b):
 
     def equalization(self, toa, eq_add, eq_mult):
         """
-        Equlization. Apply an offset and a gain.
+        Equalization. Apply an offset and a gain.
         :param toa: TOA in DN
         :param eq_add: Offset in DN
         :param eq_mult: Gain factor, adimensional
         :return: TOA in DN, equalized
         """
-        #TODO
+        toa = (toa - eq_add)/eq_mult # implemented
         return toa
 
     def restoration(self,toa,gain):
@@ -72,9 +72,8 @@ class l1b(initL1b):
         :param gain: gain in [rad/DN]
         :return: TOA in radiances [mW/sr/m2]
         """
-        #TODO
         self.logger.debug('Sanity check. TOA in radiances after gain application ' + str(toa[1,-1]) + ' [mW/m2/sr]')
-
+        toa = toa * gain
         return toa
 
     def plotL1bToa(self, toa_l1b, outputdir, band):
