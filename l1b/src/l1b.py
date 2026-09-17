@@ -60,7 +60,7 @@ class l1b(initL1b):
         :param toa: TOA in DN
         :param eq_add: Offset in DN
         :param eq_mult: Gain factor, adimensional
-        :return: TOA in DN, equalized
+        :return: TOA in DN, equalized.
         """
         toa = (toa - eq_add)/eq_mult # implemented
         return toa
