@@ -26,7 +26,11 @@ class ismConfig:
         self.kernel_half_width = 0.5             # [pixels] Half-width of the kernel
         self.kernel_step = 0.1                   # [pixels] Sampling of the kernel
 
-        # Central wavelength of the band
+        # Central wavelength of the band. at these wavelengths the information we are recording are the sun reflection
+        # the peak wavelength of the sun is 500nm between 400 and 700nm, and our sensor detects the reflection energy of the sun
+        # we get useful info from the UV up to the far IR, but we are not interested on all of those, out instrument is calibrated
+        # to work only on certain of them. we want to remove the photons from out of those 4 bands. remove photons above or below the
+        # region of interest.
         self.wv = np.array([0.49,0.665,0.865,0.945])*1e-6  # [m] Central wavelength
 
         # Photonic Stage
