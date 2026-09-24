@@ -156,7 +156,7 @@ class mtf:
         :return: detector MTF
         """
 
-        Hdet = np.abs(np.sin(np.pi*fn2D)/np.pi*fn2D)
+        Hdet = np.abs(np.sin(np.pi*fn2D)/(np.pi*fn2D))
         return Hdet
 
     def mtfSmearing(self, fnAlt, ncolumns, ksmear):
@@ -167,9 +167,9 @@ class mtf:
         :param ksmear: Amplitude of low-frequency component for the motion smear MTF in ALT [pixels]
         :return: Smearing MTF
         """
-        Hsmear = np.zeros(ncolumns)
+        Hsmear = np.zeros((fnAlt.size, ncolumns))
         for i in range(ncolumns):
-            Hsmear[:,i]=np.sinc(ksmear*fnAlt)∫
+            Hsmear[:,i]=np.sinc(ksmear*fnAlt)
         return Hsmear
 
     def mtfMotion(self, fn2D, kmotion):
