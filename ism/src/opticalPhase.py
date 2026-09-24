@@ -60,7 +60,7 @@ class opticalPhase(initIsm):
                                 self.ismConfig.defocus, self.ismConfig.ksmear, self.ismConfig.kmotion,
                                 self.outdir, band)
 
-        # Apply system MTF
+        # Apply system MTF - spatial response of our system
         toa = self.applySysMtf(toa, Hsys) # always calculated
         self.logger.debug("TOA [0,0] " +str(toa[0,0]) + " [e-]")
 
@@ -137,5 +137,3 @@ class opticalPhase(initIsm):
 
 
         return toa
-
-

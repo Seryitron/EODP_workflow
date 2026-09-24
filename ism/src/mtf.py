@@ -59,7 +59,7 @@ class mtf:
         Hwfe = self.mtfWfeAberrations(fr2D, lambd, kLF, wLF, kHF, wHF)
 
         # Detector
-        Hdet  = self. mtfDetector(fn2D)
+        Hdet  = self.mtfDetector(fn2D)
 
         # Smearing MTF
         Hsmear = self.mtfSmearing(fnAlt, ncolumns, ksmear)
@@ -91,7 +91,24 @@ class mtf:
         :return fnAct: 1D normalised frequencies 2D ACT (f/(1/w))
         :return fnAlt: 1D normalised frequencies 2D ALT (f/(1/w))
         """
-        #TODO
+        fstepAlt = 1 / nlines / w
+        fstepAct = 1 / ncolumns / w
+
+        eps = 1e-6
+        fAlt = np.arange(-1/(2*w),1/(2*w)-eps,fstepAlt)
+        fAct = np.arange(-1/(2*w),1/(2*w)-eps,fstepAct)
+
+        [fAltxx, fActxx] = np.meshgrid(fAlt,fAct, indexing='ij')
+
+        f2D = np.sqrt(fAltxx * fAltxx + fActxx * fActxx)
+
+        fn2D = f2D/(1/w)
+        fc = D/ (lambd*focal) # cutoff frequency
+        fr2D = f2D/(fc)
+
+        fnAct = fAct/(1/w)
+        fnAlt = fAlt/(1/w)
+
         return fn2D, fr2D, fnAct, fnAlt
 
     def mtfDiffract(self,fr2D):
@@ -100,7 +117,7 @@ class mtf:
         :param fr2D: 2D relative frequencies (f/fc), where fc is the optics cut-off frequency
         :return: diffraction MTF
         """
-        #TODO
+        Hdiff = 2/np.pi * (np.acos(fr2D) - fr2D*np.sqrt(1-fr2D**2))
         return Hdiff
 
 
@@ -113,7 +130,9 @@ class mtf:
         :param D: Telescope diameter [m]
         :return: Defocus MTF
         """
-        #TODO
+        x = np.pi * defocus * fr2D * (1-fr2D)
+        J1 = x/2 - x**3/16 + x**5 / 384 - x**7 / 18432
+        Hdefoc = 2*J1/x
         return Hdefoc
 
     def mtfWfeAberrations(self, fr2D, lambd, kLF, wLF, kHF, wHF):
@@ -127,7 +146,7 @@ class mtf:
         :param wHF: RMS of high-frequency wavefront errors [m]
         :return: WFE Aberrations MTF
         """
-        #TODO
+        Hwfe = np.exp(-fr2D*(1-fr2D)*(kLF*(wLF/lambd)**2+kHF*(wHF/lambd)**2))
         return Hwfe
 
     def mtfDetector(self,fn2D):
@@ -136,7 +155,8 @@ class mtf:
         :param fnD: 2D normalised frequencies (f/(1/w))), where w is the pixel width
         :return: detector MTF
         """
-        #TODO
+
+        Hdet = np.abs(np.sin(np.pi*fn2D)/np.pi*fn2D)
         return Hdet
 
     def mtfSmearing(self, fnAlt, ncolumns, ksmear):
@@ -157,7 +177,8 @@ class mtf:
         :param kmotion: Amplitude of high-frequency component for the motion smear MTF in ALT and ACT
         :return: detector MTF
         """
-        #TODO
+        # is like taking a picture during moving of the satellite
+        Hmotion = np.sinc(kmotion*fn2D)
         return Hmotion
 
     def plotMtf(self,Hdiff, Hdefoc, Hwfe, Hdet, Hsmear, Hmotion, Hsys, nlines, ncolumns, fnAct, fnAlt, directory, band):
