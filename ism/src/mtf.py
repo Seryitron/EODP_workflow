@@ -71,7 +71,7 @@ class mtf:
         self.logger.debug("Calculation of the Sysmtem MTF by multiplying the different contributors")
         Hsys = Hdiff * Hdefoc * Hwfe * Hdet * Hsmear * Hmotion
 
-        # Plot cuts ACT/ALT of the MTF
+        # Plot cuts ACT/ALT of the MTF. fn2D is basically fn along track (fnAlt) and across track (fnAct)
         self.plotMtf(Hdiff, Hdefoc, Hwfe, Hdet, Hsmear, Hmotion, Hsys, nlines, ncolumns, fnAct, fnAlt, directory, band)
 
 
@@ -202,5 +202,11 @@ class mtf:
         :return: N/A
         """
         #TODO
+
+        # tenemos que implementarlo luego para replicar una imagen que es simetrica. una imagen que esta en el
+        # documento grande. Figure 7-52 en pg 65. use the fn2D to cut the 100x150 through the 150.
+        # para el report cross validation de sus outputs con los nuestros. validar los mtf. irsf toa and irsf optical.
+        # all out outputs and hers. at the plot of the system mtf and explain what are the dominating effects. the two dimensining
+        # mtf of out system.
 
 

@@ -53,15 +53,15 @@ class opticalPhase(initIsm):
         # -------------------------------------------------------------------------------
         # Calculation and application of the system MTF
         self.logger.info("EODP-ALG-ISM-1030: Spatial modelling. PSF/MTF")
-        myMtf = mtf(self.logger, self.outdir)
+        myMtf = mtf(self.logger, self.outdir) # create an instance of the class mtf to access the 6 methods
         Hsys = myMtf.system_mtf(toa.shape[0], toa.shape[1],
                                 self.ismConfig.D, self.ismConfig.wv[getIndexBand(band)], self.ismConfig.f, self.ismConfig.pix_size,
                                 self.ismConfig.kLF, self.ismConfig.wLF, self.ismConfig.kHF, self.ismConfig.wHF,
                                 self.ismConfig.defocus, self.ismConfig.ksmear, self.ismConfig.kmotion,
                                 self.outdir, band)
-
+        # Hsys is the product of the 6 mtf. this is the system mtf. the F from F · G = I that is the image in the system domain
         # Apply system MTF - spatial response of our system
-        toa = self.applySysMtf(toa, Hsys) # always calculated
+        toa = self.applySysMtf(toa, Hsys) # always calculated. must be developed.
         self.logger.debug("TOA [0,0] " +str(toa[0,0]) + " [e-]")
 
 
@@ -96,7 +96,6 @@ class opticalPhase(initIsm):
         toa = Tr*toa*(np.pi/4)*(D/f)**2
         return toa
 
-
     def applySysMtf(self, toa, Hsys):
         """
         Application of the system MTF to the TOA
@@ -104,7 +103,22 @@ class opticalPhase(initIsm):
         :param Hsys: System MTF
         :return: TOA image in irradiances [mW/m2]
         """
-        # TODO
+        # steps from 7.1.3.19.4
+
+        # 1. Convert the TOA to the frequency domain
+        GE = fft2(toa)
+
+        # 2. Shift the system MTF (its "1" is at the centre) so that its zero
+        #    frequency (ξ=0) matches the position of the TOA's FFT (ξ=0 in the corner)
+        Hsys_shifted = fftshift(Hsys)
+
+        # 3. Multiply the TOA (in frequency domain) by the shifted system MTF
+        GE_filtered = GE * Hsys_shifted # this is a complex number and we need to check that the imaginary part is
+        # quasi negligible. second, keep only the ral part.
+        GE_ifft = ifft2(GE_filtered)
+        # 4. Go back to the spatial domain (take the real part, the rest is numerical noise)
+        toa_ft = np.real(GE_ifft)
+
         return toa_ft
 
     def spectralIntegration(self, sgm_toa, sgm_wv, band):

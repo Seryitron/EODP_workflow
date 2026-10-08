@@ -104,7 +104,11 @@ class detectionPhase(initIsm):
         :param wv: Central wavelength of the band [m]
         :return: Toa in photons
         """
-        #TODO
+        #DONE
+        E_in = toa*area_pix*tint/1000 # to convert from mW to W
+        E_photon = self.constants.h_planck * self.constants.speed_light/wv
+
+        toa_ph = E_in/E_photon # number of photons
         return toa_ph
 
     def phot2Electr(self, toa, QE):
@@ -114,7 +118,12 @@ class detectionPhase(initIsm):
         :param QE: Quantum efficiency [e-/ph]
         :return: toa in electrons
         """
-        #TODO
+        toae = toa*QE
+
+        # Saturate any pixel exceeding the Full Well Capacity (FWC)
+        toae = np.where(toae > self.ismConfig.FWC, self.ismConfig.FWC, toae)
+
+        # we need to check that the number of photons is below the full well capacity. if it is higher we need to saturate it
         return toae
 
     def badDeadPixels(self, toa,bad_pix,dead_pix,bad_pix_red,dead_pix_red):
@@ -133,13 +142,20 @@ class detectionPhase(initIsm):
     def prnu(self, toa, kprnu):
         """
         Adding the PRNU effect
-        :param toa: TOA pre-PRNU [e-]
+        :param toa: TOA pre-PRNU [e-] ism_toa_electrons is the input. vnir-0 does not saturate. 3 does saturate for sure.
         :param kprnu: multiplicative factor to the standard normal deviation for the PRNU
         :return: TOA after adding PRNU [e-]
         """
-        #TODO
-        return toa
+        # PRNU is a fixed-pattern, per-column gain variation: each detector column (pixel)
+        # has its own fixed response, constant for every time sample (row) along the track.
+        # That's why we only need one random value per column, not one per pixel.
+        n_cols = toa.shape[1]
+        prnu = np.random.standard_normal(n_cols) * kprnu
 
+        # Multiplicative effect: broadcast the per-column factor across all rows (time samples)
+        toa = toa * (1 + prnu)
+
+        return toa
 
     def darkSignal(self, toa, kdsnu, T, Tref, ds_A_coeff, ds_B_coeff):
         """
@@ -151,6 +167,19 @@ class detectionPhase(initIsm):
         :param ds_A_coeff: Empirical parameter of the model 7.87 e-
         :param ds_B_coeff: Empirical parameter of the model 6040 K
         :return: TOA in [e-] with dark signal
+        DSNU: dark signal non uniformity
         """
-        #TODO
+        # DSNU is a fixed-pattern, per-column non-uniformity: one random value per
+        # detector column, constant across all time samples (rows)
+        n_cols = toa.shape[1]
+        DSNU = abs(np.random.standard_normal(n_cols)) * kdsnu
+
+        # Dark signal model (temperature dependent)
+        Sd = ds_A_coeff * (T / Tref) ** 3 * np.exp(-ds_B_coeff * (1 / T - 1 / Tref))
+
+        # Apply the non-uniformity (broadcasts the per-column factor across all rows)
+        DS = Sd * (1 + DSNU)
+
+        toa = toa + DS
+
         return toa
