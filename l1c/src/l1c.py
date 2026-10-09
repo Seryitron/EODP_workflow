@@ -1,3 +1,4 @@
+from scipy.constants import precision
 
 # LEVEL-1C
 
@@ -48,7 +49,7 @@ class l1c(initL1c):
         This function reprojects the L1B radiances into the MGRS grid.
 
         The MGRS reference system
-        https://www.bluemarblegeo.com/knowledgebase/calculator-2020/Military_Grid_Reference_System_(MGRS).htm
+        htt ps://www.bluemarblegeo.com/knowledgebase/calculator-2020/Military_Grid_Reference_System_(MGRS).htm
         MGRS: '31REQ4367374067'
         31 is the UTM zone, R is the UTM latitude band; EQ are the MGRS column and row band letters
         43673 is the MGRS Easting (5 dig); 74067 is the MGRS Northing (5dig)
@@ -62,7 +63,32 @@ class l1c(initL1c):
         :param band: band
         :return: L1C radiances, L1C latitude and longitude in degrees
         '''
-        #TODO
+        #TODO - done
+        tck = bisplrep(lat, lon, toa)
+        m = mgrs.MGRS() # m is the instance of the class MGRS
+        mgrs_tiles = set([])
+
+        # iterate acrosstrack and alongtrack.
+        for i in range(toa.shape[0]): # iterate lat
+            for j in range(toa.shape[1]): # iterate lon
+                auxi = m.toMGRS(lat[i,j], lon[i,j], MGRSPrecision= self.l1cConfig.mgrs_tile_precision)
+                mgrs_tiles.add(auxi)
+
+        mgrs_tiles = list(mgrs_tiles)
+        # initialize variables
+        toa_l1c = np.zeros(len(mgrs_tiles))
+        lat_l1c = np.zeros(len(mgrs_tiles))
+        lon_l1c = np.zeros(len(mgrs_tiles))
+
+        tck = bisplrep(lat, lon, toa)
+        # iterate over this size
+        for i in range(len(mgrs_tiles)): # iterate over the l1c points
+            # function returns a tuple of lat lon to convert them back to geodetic coordinates
+            (lat_l1c[i], lon_l1c[i]) = m.toLatLon(mgrs_tiles[i])
+
+            # call the interpolator with lat lon at the interpolation points that we want
+            toa_l1c[i] = bisplev(lat_l1c[i], lon_l1c[i], tck)
+
         return lat_l1c, lon_l1c, toa_l1c
 
     def checkSize(self, lat,toa):
