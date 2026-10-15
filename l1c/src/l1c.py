@@ -1,5 +1,3 @@
-from scipy.constants import precision
-
 # LEVEL-1C
 
 from l1c.src.initL1c import initL1c
@@ -7,6 +5,7 @@ from common.io.writeToa import writeToa, readToa
 from common.io.readGeodetic import readGeodetic, getCorners
 import mgrs
 import numpy as np
+import sys
 from scipy.interpolate import bisplrep, bisplev
 import matplotlib.pyplot as plt
 from common.io.l1cProduct import writeL1c
@@ -63,8 +62,6 @@ class l1c(initL1c):
         :param band: band
         :return: L1C radiances, L1C latitude and longitude in degrees
         '''
-        #TODO - done
-        tck = bisplrep(lat, lon, toa)
         m = mgrs.MGRS() # m is the instance of the class MGRS
         mgrs_tiles = set([])
 
@@ -99,4 +96,6 @@ class l1c(initL1c):
         :param toa: Radiance 2D matrix
         :return: NA
         '''
-        #TODO
+        if lat.shape != toa.shape:
+            self.logger.error("Size mismatch: geodetic " + str(lat.shape) + " vs TOA " + str(toa.shape) + ". Exiting.")
+            sys.exit("L1C: the sizes of the geodetic coordinates and the TOA do not match.")
